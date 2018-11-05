@@ -37,7 +37,7 @@ passport.deserializeUser(function (obj, done) {
 passport.use(new SpotifyStrategy({
         clientID: appKey,
         clientSecret: appSecret,
-        callbackURL: 'spotifybot.us-3.evennode.com/callback'
+        callbackURL: 'http://spotifybot.us-3.evennode.com/callback'
         //callbackURL: 'http://localhost:3000/callback'
     },
         function (accessToken, refreshToken, profile, done) {
