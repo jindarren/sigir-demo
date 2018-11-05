@@ -1,0 +1,43 @@
+doctype html
+html(lang='en-us')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    meta(name='viewport', content='width=device-width')
+    meta(name='description', content='Simple AI Chat Bot Demo with Web Speech API')
+    meta(name='author', content='Tomomi Imura  @girlie_mac')
+    title Simple AI Demo with Web Speech API
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')
+    link(rel='stylesheet', href='css/style.css')
+  body
+    p#user-id(style="display:none") #{data.id}
+    section
+      h1 Simple Music Bot
+      if data.displayName
+        p Welcome #{data.displayName} &nbsp&nbsp&nbsp&nbsp
+          a.btn.btn-primary(href='/logout' role="button") Log Out&nbsp&nbsp
+        p
+          a.btn.btn-info.disabled(class="questionnaire" target="_blank" href="https://goo.gl/forms/RFtC9cni6o8qrhu52") I have found the enough songs I like
+      else
+        p Welcome #{data.id} &nbsp&nbsp&nbsp&nbsp
+          a.btn.btn-primary(href='/logout' role="button") Log Out&nbsp&nbsp
+        p  
+          a.btn.btn-info.disabled(class="questionnaire" target="_blank" href="https://goo.gl/forms/RFtC9cni6o8qrhu52") I have found the enough songs I like
+      button#voice
+        i.fa.fa-microphone
+      div
+        p Or please type
+        input#message(type='text', name='message', value='')
+        button#text(type='button') Send
+        br
+        p
+          | You said: 
+          em.output-you ...
+        p
+          | Bot replied: 
+          em.output-bot ...
+    audio(src='', style='display: none;')
+    script(type = "text/javascript", src = "../jquery/dist/jquery.min.js", charset = 'utf-8')
+    script(type = "text/javascript", src = "../jquery.cookie/jquery.cookie.js", charset = 'utf-8')
+    script(src='/socket.io/socket.io.js')
+    script(src='js/script.js')
