@@ -176,6 +176,7 @@ $(document).ready(function () {
 
                 console.log(playlists[songIndex].link)
                 player.src=playlists[songIndex].link
+                document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].trackID+' width='
               }
 
               utterance.onend = function(event) {
@@ -190,6 +191,8 @@ $(document).ready(function () {
                   songIndex++;
                 setTimeout(function(){
                   player.src=playlists[songIndex].link
+                  document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].trackID+' width='
+
                   player.play();
                 },2000)
               }
