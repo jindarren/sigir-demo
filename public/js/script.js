@@ -121,20 +121,17 @@ $(document).ready(function () {
             function synthVoice(text) {
               const synth = window.speechSynthesis;
               const utterance = new SpeechSynthesisUtterance();
+              var player = document.querySelector("audio")
 
               utterance.onstart = function(event) {
                   resumeInfinity();
               };
 
-              if(text.indexOf('genre:')>=0){
-                var genre = text.substring(6)
-                text = "Play a" + genre + "'s music"
-              }
-              else if(text.indexOf('artist:')>=0){
-                  var artist = text.substring(7)
-                  text = "Play " + artist + "'s song"
+              if(text.indexOf('artist:')>=0 || text.indexOf('genre:')>=0){
+                  var keywords = text.substr(text.indexOf(":") + 1)
+                  text = "Play a song of " + keywords
                   $.ajax({
-                    url: 'https://api.spotify.com/v1/search?q='+artist+'&type=track',
+                    url: 'https://api.spotify.com/v1/search?q='+keywords+'&type=track',
                     data: {},
                     beforeSend: function(request) {
                         request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
@@ -142,6 +139,9 @@ $(document).ready(function () {
                     dataType: 'JSON',
                     type: 'GET',
                     success: function (songs) {
+                      var oldList = playlists.concat();
+                      playlists = []
+                      songIndex = 0
 
                       for(var index in songs.tracks.items){
                           if(songs.tracks.items[index].preview_url){
@@ -154,23 +154,29 @@ $(document).ready(function () {
                               playlists.push(oneRecommendation)
                           }
                       }
+                      if(playlists.length<1)
+                        playlists = oldList
                       console.log(playlists)
+                      speakandsing(text)
                     },
                     error: function (err) {
                       console.log(err)
                     }
                 });
+              }else{
+                speakandsing(text)
               }
 
-              utterance.text = text;
-              synth.speak(utterance);
-              // if(text == '') 
-              //   text = '(No answer...)';
-              outputBot.textContent = text;
+              function speakandsing(text){
+                utterance.text = text;
+                synth.speak(utterance);
+                // if(text == '') 
+                //   text = '(No answer...)';
+                outputBot.textContent = text;
 
-              var player = document.querySelector("audio")
-              console.log(playlists[songIndex].link)
-              player.src=playlists[songIndex].link
+                console.log(playlists[songIndex].link)
+                player.src=playlists[songIndex].link
+              }
 
               utterance.onend = function(event) {
                 clearTimeout(timeoutResumeInfinity);
