@@ -36,7 +36,6 @@ loggingSys.highSliderTime = 0;
 loggingSys.highSortingTime = 0;
 loggingSys.detailTime = 0;
 
-
 $(document).ready(function () {
 
     //alert("Please make sure you have submitted the pre-study questionnaire!")
@@ -65,8 +64,7 @@ $(document).ready(function () {
             //   alert("Sorry, you are not eligible for this study :( Because you have no sufficient usage data on Spotify to generate recommendations.")
             //   window.location.href = "/logout";
             // }
-
-            
+  
             var playlists = data.vis;
             console.log(playlists)
 
@@ -127,46 +125,53 @@ $(document).ready(function () {
                   resumeInfinity();
               };
 
-              if(text.indexOf('artist:')>=0 || text.indexOf('genre:')>=0){
-                  var keywords = text.substr(text.indexOf(":") + 1)
-                  text = "Play a song of " + keywords
-                  $.ajax({
-                    url: 'https://api.spotify.com/v1/search?q='+keywords+'&type=track',
-                    data: {},
-                    beforeSend: function(request) {
-                        request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
-                    },
-                    dataType: 'JSON',
-                    type: 'GET',
-                    success: function (songs) {
-                      var oldList = playlists.concat();
-                      playlists = []
-                      songIndex = 0
+              var keywords;
 
-                      for(var index in songs.tracks.items){
-                          if(songs.tracks.items[index].preview_url){
-                              var oneRecommendation = {};
-                              oneRecommendation.artist = songs.tracks.items[index].artists[0].name;
-                              oneRecommendation.song = songs.tracks.items[index].name;
-                              oneRecommendation.popularity =  songs.tracks.items[index].popularity;
-                              oneRecommendation.link = songs.tracks.items[index].preview_url;
-                              oneRecommendation.trackID = songs.tracks.items[index].id;
-                              playlists.push(oneRecommendation)
-                          }
+              if(text.parameters["music-languages"][0])
+                keywords = text.parameters["music-languages"][0]
+              else if (text.parameters.artist[0])
+                keywords = text.parameters.artist[0]
+              else if (text.parameters.genre[0])
+                keywords = text.parameters.genre[0]
+              else if (text.parameters["music-features"][0])
+                keywords = text.parameters["music-features"][0]
+              
+              var response = text.fulfillment.speech;
+         
+              $.ajax({
+                url: 'https://api.spotify.com/v1/search?q='+keywords+'&type=track',
+                data: {},
+                beforeSend: function(request) {
+                    request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
+                },
+                dataType: 'JSON',
+                type: 'GET',
+                success: function (songs) {
+                  var oldList = playlists.concat();
+                  playlists = []
+                  songIndex = 0
+
+                  for(var index in songs.tracks.items){
+                      if(songs.tracks.items[index].preview_url){
+                          var oneRecommendation = {};
+                          oneRecommendation.artist = songs.tracks.items[index].artists[0].name;
+                          oneRecommendation.song = songs.tracks.items[index].name;
+                          oneRecommendation.popularity =  songs.tracks.items[index].popularity;
+                          oneRecommendation.link = songs.tracks.items[index].preview_url;
+                          oneRecommendation.trackID = songs.tracks.items[index].id;
+                          playlists.push(oneRecommendation)
                       }
-                      if(playlists.length<1)
-                        playlists = oldList
-                      console.log(playlists)
-                      speakandsing(text)
-                    },
-                    error: function (err) {
-                      console.log(err)
-                    }
-                });
-              }else{
-                speakandsing(text)
-              }
-
+                  }
+                  if(playlists.length<1)
+                    playlists = oldList
+                  console.log(playlists)
+                  speakandsing(response)
+                },
+                error: function (err) {
+                  console.log(err)
+                }
+              });
+              
               function speakandsing(text){
                 utterance.text = text;
                 synth.speak(utterance);
@@ -199,8 +204,9 @@ $(document).ready(function () {
 
           }
 
-            socket.on('bot reply', function(replyText) {
-              synthVoice(replyText);
+            socket.on('bot reply', function(data) {
+              console.log(data)
+              synthVoice(data);
             });
 
             function resumeInfinity() {

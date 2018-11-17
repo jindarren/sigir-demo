@@ -1,7 +1,9 @@
 'use strict';
 
-const APIAI_TOKEN = '4b48fe544c5f435d8e325f450b26b5f9';
-const APIAI_SESSION_ID = 'PINNA';
+//const APIAI_TOKEN = '4b48fe544c5f435d8e325f450b26b5f9';
+const APIAI_TOKEN = '1493bad763ec4671b1ee6ea4a8c80452';
+
+const APIAI_SESSION_ID = '123456789abcdefghj';
 
 
 const express = require('express'),
@@ -80,9 +82,9 @@ io.on('connection', function(socket) {
     });
 
     apiaiReq.on('response', (response) => {
-      let aiText = response.result.fulfillment.speech;
-      console.log('Bot reply: ' + aiText);
-      socket.emit('bot reply', aiText);
+      //let aiText = response.result.fulfillment.speech;
+      console.log('Bot reply: ' + response.result.fulfillment.speech);
+      socket.emit('bot reply', response.result);
     });
 
     apiaiReq.on('error', (error) => {
