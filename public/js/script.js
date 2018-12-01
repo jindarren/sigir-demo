@@ -50,7 +50,7 @@ $(document).ready(function () {
               refreshToken = data.refresh_token
           }
       })
-  }, 3500*1000)
+  }, 3600*1000)
 
   console.log(spotifyToken)
 
@@ -64,9 +64,20 @@ $(document).ready(function () {
             //   alert("Sorry, you are not eligible for this study :( Because you have no sufficient usage data on Spotify to generate recommendations.")
             //   window.location.href = "/logout";
             // }
+
+            var seed_artists = data.seed.artist[0][0].id;
+            var seed_tracks = data.seed.track[0][0].id;
+
+            var target_valence = 0.5;
+            var target_energy = 0.5;
+            var target_danceability = 0.5;
+            var target_liveness = 0.5;
+            var target_speechiness = 0.5;
+            var target_popularity = 50;
+            var target_tempo = 80; // 60 90 130 180
   
             var playlists = data.vis;
-            console.log(playlists)
+            console.log(data)
 
             recognition.lang = 'en-US';
             recognition.interimResults = false;
@@ -116,6 +127,10 @@ $(document).ready(function () {
               outputBot.textContent = 'Error: ' + e.error;
             });
 
+
+            /*
+            This fuction parses the returned data from Dialog flow
+            */
             function synthVoice(text) {
               const synth = window.speechSynthesis;
               const utterance = new SpeechSynthesisUtterance();
@@ -125,47 +140,227 @@ $(document).ready(function () {
                   resumeInfinity();
               };
 
-              var keywords;
+              /*fields for returned data
+              artist
+              music-features
+              music-languages
+              music-genres
+              feature-actions
+              music-valence
+              song
+              */
 
-              if(text.parameters["music-languages"][0])
-                keywords = text.parameters["music-languages"][0]
-              else if (text.parameters.artist[0])
-                keywords = text.parameters.artist[0]
-              else if (text.parameters.genre[0])
-                keywords = text.parameters.genre[0]
-              else if (text.parameters["music-features"][0])
-                keywords = text.parameters["music-features"][0]
+              var action = text.parameters["feature-actions"][0]
+              var feature = text.parameters["music-features"][0]
+              var valence = text.parameters["music-valence"][0]
+
+              var artist = text.parameters["artist"][0]
+              var song = text.parameters["song"][0]
+              var language = text.parameters["music-languages"][0]
+              var genre = text.parameters["music-genres"][0]
               
               var response = text.fulfillment.speech;
-         
+
+
+              var requestLink;
+              //search by artist
+              if(artist)
+                requestLink = 'https://api.spotify.com/v1/search?q='+artist+'&type=artist'
+              else if(song)
+                requestLink = 'https://api.spotify.com/v1/search?q='+song+'&type=track'
+              else if(language)
+                requestLink = 'https://api.spotify.com/v1/search?q='+language+'&type=playlist'
+              else if(genre)
+                requestLink = 'https://api.spotify.com/v1/search?q=genre:'+genre+'&type=artist'
+              else if(valence){
+                if(action=="increase" && target_valence<1)
+                  target_valence+=0.1
+                else if(action=="decrease" && target_valence>0.1)
+                  target_valence-=0.1
+                requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_valence='+target_valence;
+              }
+
+              console.log(feature, seed_artists, seed_tracks)
+
+              if(feature){
+                if(feature=="energy"){                
+                  if(action=="increase" && target_energy<1)
+                    target_energy+=0.1
+                  else if(action=="decrease" && target_energy>0.1)
+                    target_energy-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_energy='+target_energy;
+                }
+                else if(feature=="danceability"){
+                  if(action=="increase" && target_danceability<1)
+                    target_danceability+=0.1
+                  else if(action=="decrease" && target_danceability>0.1)
+                    target_danceability-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_danceability='+target_danceability;
+                }
+                else if(feature=="liveness"){
+                  if(action=="increase" && target_liveness<1)
+                    target_liveness+=0.1
+                  else if(action=="decrease" && target_liveness>0.1)
+                    target_liveness-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_liveness='+target_liveness;
+                }
+                else if(feature=="speech"){
+                  if(action=="increase" && target_speechiness<1)
+                    target_speechiness+=0.1
+                  else if(action=="decrease" && target_speechiness>0.1)
+                    target_speechiness-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_speechiness='+target_speechiness;
+                }
+                else if(feature=="popularity"){
+                  if(action=="increase" && target_popularity<1)
+                    target_popularity+=0.1
+                  else if(action=="decrease" && target_popularity>0.1)
+                    target_popularity-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_popularity='+target_popularity;
+                }
+                else if(feature=="tempo"){
+                  if(action=="increase" && target_tempo<1)
+                    target_tempo+=0.1
+                  else if(action=="decrease" && target_tempo>0.1)
+                    target_tempo-=0.1
+                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_tempo='+target_tempo;
+                }
+              }
+
+              console.log(requestLink)
+              
               $.ajax({
-                url: 'https://api.spotify.com/v1/search?q='+keywords+'&type=track',
+                url: requestLink,
                 data: {},
                 beforeSend: function(request) {
                     request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
                 },
                 dataType: 'JSON',
                 type: 'GET',
-                success: function (songs) {
+                success: function (res) {
+                  console.log(res)
                   var oldList = playlists.concat();
                   playlists = []
                   songIndex = 0
+                  if(res.seeds){
+                    var songs = res.tracks
+                        oldList = playlists.concat();
+                        playlists = []
+                        songIndex = 0
+                        for (var index in songs){
+                          if(songs[index].preview_url){
+                            var newSong = {}
+                            newSong["id"] = songs[index].id
+                            newSong["url"] = songs[index].preview_url
+                            playlists.push(newSong)
+                          }
+                        }
+                        if(playlists.length<1)
+                          playlists = oldList
+                        console.log(playlists)
+                        speakandsing(response)
 
-                  for(var index in songs.tracks.items){
-                      if(songs.tracks.items[index].preview_url){
-                          var oneRecommendation = {};
-                          oneRecommendation.artist = songs.tracks.items[index].artists[0].name;
-                          oneRecommendation.song = songs.tracks.items[index].name;
-                          oneRecommendation.popularity =  songs.tracks.items[index].popularity;
-                          oneRecommendation.link = songs.tracks.items[index].preview_url;
-                          oneRecommendation.trackID = songs.tracks.items[index].id;
-                          playlists.push(oneRecommendation)
-                      }
                   }
-                  if(playlists.length<1)
-                    playlists = oldList
-                  console.log(playlists)
-                  speakandsing(response)
+                  else if(res.tracks){
+                    var songs = res.tracks.items
+                        oldList = playlists.concat();
+                        playlists = []
+                        songIndex = 0
+                        for (var index in songs){
+                          if(songs[index].preview_url){
+                            var newSong = {}
+                            newSong["id"] = songs[index].id
+                            newSong["url"] = songs[index].preview_url
+                            playlists.push(newSong)
+                          }
+                        }
+                        if(playlists.length<1)
+                          playlists = oldList
+                        console.log(playlists)
+                        speakandsing(response)
+
+                  }
+                  else if(res.artists){
+                    var artistID = res.artists.items[0].id;
+                    $.ajax({
+                      url: "https://api.spotify.com/v1/artists/"+artistID+"/top-tracks?country=SE",
+                      data: {},
+                      beforeSend: function(request) {
+                          request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
+                      },
+                      dataType: 'JSON',
+                      type: 'GET',
+                      success: function (res) {
+                        console.log(res)
+                        var songs = res.tracks
+                        oldList = playlists.concat();
+                        playlists = []
+                        songIndex = 0
+                        for (var index in songs){
+                          if(songs[index].preview_url){
+                            var newSong = {}
+                            newSong["id"] = songs[index].id
+                            newSong["url"] = songs[index].preview_url
+                            playlists.push(newSong)
+                          }
+                        }
+                        
+                        if(playlists.length<1)
+                          playlists = oldList
+                        console.log(playlists)
+                        speakandsing(response)
+                      }
+                    })
+                  }
+                  else if(res.playlists){
+                    var listID = res.playlists.items[0].id;
+                    $.ajax({
+                      url: "https://api.spotify.com/v1/playlists/"+listID+"/tracks?limit=50",
+                      data: {},
+                      beforeSend: function(request) {
+                          request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
+                      },
+                      dataType: 'JSON',
+                      type: 'GET',
+                      success: function (res) {
+
+                        console.log(res)
+
+                        var songs = res.items
+                        oldList = playlists.concat();
+                        playlists = []
+                        songIndex = 0
+                        for (var index in songs){
+                          if(songs[index].track.preview_url){
+                            var newSong = {}
+                            newSong["id"] = songs[index].track.id
+                            newSong["url"] = songs[index].track.preview_url
+
+                            playlists.push(newSong)
+                          }
+                        }
+
+                        if(playlists.length<1)
+                          playlists = oldList
+                        console.log(playlists)
+                        speakandsing(response)
+
+                      }
+                    })
+                  }
+
+                  // for(var index in songs.tracks.items){
+                  //     if(songs.tracks.items[index].preview_url){
+                  //         var oneRecommendation = {};
+                  //         oneRecommendation.artist = songs.tracks.items[index].artists[0].name;
+                  //         oneRecommendation.song = songs.tracks.items[index].name;
+                  //         oneRecommendation.popularity =  songs.tracks.items[index].popularity;
+                  //         oneRecommendation.link = songs.tracks.items[index].preview_url;
+                  //         oneRecommendation.trackID = songs.tracks.items[index].id;
+                  //         playlists.push(oneRecommendation)
+                  //     }
+                  // }
+
                 },
                 error: function (err) {
                   console.log(err)
@@ -179,9 +374,8 @@ $(document).ready(function () {
                 //   text = '(No answer...)';
                 outputBot.textContent = text;
 
-                console.log(playlists[songIndex].link)
-                player.src=playlists[songIndex].link
-                document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].trackID+' width='
+                player.src=playlists[songIndex].url
+                document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].id+' width='
               }
 
               utterance.onend = function(event) {
@@ -195,8 +389,8 @@ $(document).ready(function () {
                 else
                   songIndex++;
                 setTimeout(function(){
-                  player.src=playlists[songIndex].link
-                  document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].trackID+' width='
+                  player.src=playlists[songIndex].url
+                  document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].id+' width='
 
                   player.play();
                 },2000)

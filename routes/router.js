@@ -37,8 +37,8 @@ passport.deserializeUser(function (obj, done) {
 passport.use(new SpotifyStrategy({
         clientID: appKey,
         clientSecret: appSecret,
-        callbackURL: 'http://spotifybot.us-3.evennode.com/callback'
-        //callbackURL: 'http://localhost:3000/callback'
+        //callbackURL: 'http://spotifybot.us-3.evennode.com/callback'
+        callbackURL: 'http://localhost:3000/callback'
     },
         function (accessToken, refreshToken, profile, done) {
         // asynchronous verification, for effect...
@@ -258,40 +258,39 @@ router.get('/initiate', function (req, res) {
     var reqData = {};
     reqData.artist=[],reqData.track=[],reqData.genre=[]
     var visData = [];
-    var oneArtistSeed, oneTrackSeed, oneGenreSeed;
+    var oneArtistSeed, oneTrackSeed;
     var token = req.query.token
 
 
     var getTopArtists =
         recom(token).getTopArtists(10).then(function (data) {
             reqData.artist.push(data);
-            oneArtistSeed = data[0].id
+            console.log(data)
         });
 
 
     var getTracks =
         recom(token).getTopTracks(10).then(function (data) {
             reqData.track.push(data);
-            oneTrackSeed = data[0].id
+            console.log(data)
         });
 
     var getGenres =
         recom(token).getTopGenres().then(function (data) {
             reqData.genre.push(data);
-            oneGenreSeed = data[0]
         });
 
     Promise.all([getTopArtists, getTracks, getGenres]).then(function () {
-        recom(token).getRecommendation(50,oneArtistSeed, oneTrackSeed, oneGenreSeed).then(function (data) {
+        recom(token).getRecommendation(50,oneArtistSeed, oneTrackSeed).then(function (data,err) {
             for(var index in data){
                 if(data[index].preview_url){
-                    var oneRecommendation = {};
-                    oneRecommendation.artist = data[index].artists[0].name;
-                    oneRecommendation.song = data[index].name;
-                    oneRecommendation.popularity =  data[index].popularity;
-                    oneRecommendation.link = data[index].preview_url;
-                    oneRecommendation.trackID = data[index].id;
-                    visData.push(oneRecommendation)
+                    // var oneRecommendation = {};
+                    // oneRecommendation.artist = data[index].artists[0].name;
+                    // oneRecommendation.song = data[index].name;
+                    // oneRecommendation.popularity =  data[index].popularity;
+                    // oneRecommendation.link = data[index].preview_url;
+                    // oneRecommendation.trackID = data[index].id;
+                    visData.push(data[index])
                 }
             }
             res.json({
