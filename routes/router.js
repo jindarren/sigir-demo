@@ -555,7 +555,7 @@ var generateCritiquing = function(user) {
 
     let userdata = new UserData(user.id, preferenceData, preferenceData_variance, attributeWeight);
 
-    console.log(playlist[2])
+    console.log(playlist[0])
     console.log("------------------------------------------------");
     console.log("Total Item Data: " + playlist.length + " records");
     console.log("Read Music Data Finished!");
