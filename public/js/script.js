@@ -8,420 +8,419 @@ const outputBot = document.querySelector('.output-bot');
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 
-
-const totalRecomsNum = 20;
-var recom = {}, trackAttributes={};
-var storage = window.localStorage;
-var xhrList = [];
-var isInitialized = true;
 var spotifyToken = $.cookie('spotify-token')
 var refreshToken = $.cookie('refresh-token')
 
-var loggingSys = {}
-loggingSys.timestamp = new Date();
-loggingSys.id = '';
-loggingSys.duration = new Date();
-loggingSys.setting = window.location.pathname;
-loggingSys.rating = {
-    id:[],
-    likes:[]
-};
-loggingSys.likedTime = 0;
-loggingSys.lowSortingTime = 0;
-loggingSys.lowRemovingTime = 0;
-loggingSys.lowRatingTime = 0;
-loggingSys.middleDraggingTime = 0;
-loggingSys.middleLoadMoreTime = 0;
-loggingSys.highSliderTime = 0;
-loggingSys.highSortingTime = 0;
-loggingSys.detailTime = 0;
+var skipTimes = 0;
 
-$(document).ready(function () {
-
-    //alert("Please make sure you have submitted the pre-study questionnaire!")
-    //refresh the token
-  setInterval(function () {
-      $.ajax("/refresh-token?refresh_token="+refreshToken, function (data, err) {
-          if(err)
-              console.log(err)
-          else{
-              console.log(data)
-              spotifyToken = data.access_token
-              refreshToken = data.refresh_token
-          }
-      })
-  }, 3600*1000)
+$(document).ready(function() {
+  //alert("Please make sure you have submitted the pre-study questionnaire!")
+  //refresh the token
+  setInterval(function() {
+    $.ajax("/refresh-token?refresh_token=" + refreshToken, function(data, err) {
+      if (err)
+        console.log(err)
+      else {
+        console.log(data)
+        spotifyToken = data.access_token
+        refreshToken = data.refresh_token
+      }
+    })
+  }, 3600 * 1000)
 
   console.log(spotifyToken)
 
   $.ajax({
-        url: "/initiate?token="+spotifyToken,
-        success: function (data) {
-            // loggingSys.id = data.seed.id;
-            // loading the recommendations
+    url: "/initiate?token=" + spotifyToken,
+    success: function(data) {
+      // loggingSys.id = data.seed.id;
+      // loading the recommendations
 
-            // if(data.seed.artist.length<3 || data.seed.track.length<3){
-            //   alert("Sorry, you are not eligible for this study :( Because you have no sufficient usage data on Spotify to generate recommendations.")
-            //   window.location.href = "/logout";
-            // }
+      // if(data.seed.artist.length<3 || data.seed.track.length<3){
+      //   alert("Sorry, you are not eligible for this study :( Because you have no sufficient usage data on Spotify to generate recommendations.")
+      //   window.location.href = "/logout";
+      // }
 
-            var seed_artists = data.seed.artist[0][0].id;
-            var seed_tracks = data.seed.track[0][0].id;
+      console.log(data)
+      var seed_artists = data.seed.artist[0][0].id;
+      var seed_tracks = data.seed.track[0][0].id;
 
-            var target_valence = 0.5;
-            var target_energy = 0.5;
-            var target_danceability = 0.5;
-            var target_liveness = 0.5;
-            var target_speechiness = 0.5;
-            var target_popularity = 50;
-            var target_tempo = 80; // 60 90 130 180
-  
-            var playlists = data.vis;
-            console.log(data)
+      var target_energy = 0.5;
+      var target_danceability = 0.5;
+      var target_liveness = 0.5;
+      var target_speechiness = 0.5;
+      var target_popularity = 50;
+      var target_tempo = 80; // 60 90 130 180
 
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+      var playlists = data.vis,
+        oldList = [];
 
-            var songIndex = 0;
-            var timeoutResumeInfinity;
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-            document.querySelector('button#voice').addEventListener('click', () => {
-              recognition.start();
-            });
+      var songIndex = 0;
+      var timeoutResumeInfinity;
+      var critiques = [],
+        critiquesIndex = 0;
+      var needReply = false;
 
-            document.querySelector('button#text').addEventListener('click', () => {
-              var text = document.querySelector('input#message').value
-              socket.emit('chat message', text);
-              outputYou.textContent = text;
+      document.querySelector('button#voice').addEventListener('click', () => {
+        recognition.start();
+      });
 
-              if(text.indexOf("next")>-1){
-                if(songIndex==data.vis.length-1)
-                  songIndex = 0
-                else
-                  songIndex++;
-              }
-            });
+      document.querySelector('button#text').addEventListener('click', () => {
+        var text = document.querySelector('input#message').value
+        socket.emit('chat message', text);
+        outputYou.textContent = text;
 
-            recognition.addEventListener('speechstart', () => {
-              console.log('Speech has been detected.');
-            });
+        if (text.indexOf("next") > -1) {
+          if (songIndex == data.vis.length - 1)
+            songIndex = 0
+          else
+            songIndex++;
+        }
+      });
 
-            recognition.addEventListener('result', (e) => {
-              console.log('Result has been detected.');
+      recognition.addEventListener('speechstart', () => {
+        console.log('Speech has been detected.');
+      });
 
-              let last = e.results.length - 1;
-              let text = e.results[last][0].transcript;
+      recognition.addEventListener('result', (e) => {
+        console.log('Result has been detected.');
 
-              outputYou.textContent = text;
-              console.log('Confidence: ' + e.results[0][0].confidence);
+        let last = e.results.length - 1;
+        let text = e.results[last][0].transcript;
 
-              socket.emit('chat message', text);
-            });
+        outputYou.textContent = text;
+        console.log('Confidence: ' + e.results[0][0].confidence);
 
-            recognition.addEventListener('speechend', () => {
-              recognition.stop();
-            });
+        socket.emit('chat message', text);
+      });
 
-            recognition.addEventListener('error', (e) => {
-              outputBot.textContent = 'Error: ' + e.error;
-            });
+      recognition.addEventListener('speechend', () => {
+        recognition.stop();
+      });
 
+      recognition.addEventListener('error', (e) => {
+        outputBot.textContent = 'Error: ' + e.error;
+      });
 
-            /*
-            This fuction parses the returned data from Dialog flow
-            */
-            function synthVoice(text) {
-              const synth = window.speechSynthesis;
-              const utterance = new SpeechSynthesisUtterance();
-              var player = document.querySelector("audio")
+      /*
+      This fuction parses the returned data from Dialog flow
+      */
+      function synthVoice(text) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance();
+        var player = document.querySelector("audio")
+        utterance.onstart = function(event) {
+          resumeInfinity();
+        };
 
-              utterance.onstart = function(event) {
-                  resumeInfinity();
-              };
+        /*fields for returned data
+        artist
+        music-features
+        music-languages
+        music-genres
+        feature-actions
+        music-valence
+        song
+        */
+        var intent = text.action;
+        var response = text.fulfillment.speech;
 
-              /*fields for returned data
-              artist
-              music-features
-              music-languages
-              music-genres
-              feature-actions
-              music-valence
-              song
-              */
-
-              var action = text.parameters["feature-actions"][0]
-              var feature = text.parameters["music-features"][0]
-              var valence = text.parameters["music-valence"][0]
-
-              var artist = text.parameters["artist"][0]
-              var song = text.parameters["song"][0]
-              var language = text.parameters["music-languages"][0]
-              var genre = text.parameters["music-genres"][0]
-              
-              var response = text.fulfillment.speech;
+        var requestLink;
+        //search by artist
+        if (intent == "music_player_control.skip_forward") {
+          if (skipTimes == 2) {
+            //if skip more than 2 times, then critique
 
 
-              var requestLink;
-              //search by artist
-              if(artist)
-                requestLink = 'https://api.spotify.com/v1/search?q='+artist+'&type=artist'
-              else if(song)
-                requestLink = 'https://api.spotify.com/v1/search?q='+song+'&type=track'
-              else if(language)
-                requestLink = 'https://api.spotify.com/v1/search?q='+language+'&type=playlist'
-              else if(genre)
-                requestLink = 'https://api.spotify.com/v1/search?q=genre:'+genre+'&type=artist'
-              else if(valence){
-                if(action=="increase" && target_valence<1)
-                  target_valence+=0.1
-                else if(action=="decrease" && target_valence>0.1)
-                  target_valence-=0.1
-                requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_valence='+target_valence;
-              }
+            //-------------------Start critiquing-------------------//
+            needReply = true;
 
-              console.log(feature, seed_artists, seed_tracks)
+            $.ajax({
+              url: "/generateCritiquing",
+              type: "POST",
+              contentType: "application/json;charset=utf-8",
+              data: JSON.stringify(data.user),
+              dataType: "json",
+              success: function(result) {
 
-              if(feature){
-                if(feature=="energy"){                
-                  if(action=="increase" && target_energy<1)
-                    target_energy+=0.1
-                  else if(action=="decrease" && target_energy>0.1)
-                    target_energy-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_energy='+target_energy;
-                }
-                else if(feature=="danceability"){
-                  if(action=="increase" && target_danceability<1)
-                    target_danceability+=0.1
-                  else if(action=="decrease" && target_danceability>0.1)
-                    target_danceability-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_danceability='+target_danceability;
-                }
-                else if(feature=="liveness"){
-                  if(action=="increase" && target_liveness<1)
-                    target_liveness+=0.1
-                  else if(action=="decrease" && target_liveness>0.1)
-                    target_liveness-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_liveness='+target_liveness;
-                }
-                else if(feature=="speech"){
-                  if(action=="increase" && target_speechiness<1)
-                    target_speechiness+=0.1
-                  else if(action=="decrease" && target_speechiness>0.1)
-                    target_speechiness-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_speechiness='+target_speechiness;
-                }
-                else if(feature=="popularity"){
-                  if(action=="increase" && target_popularity<1)
-                    target_popularity+=0.1
-                  else if(action=="decrease" && target_popularity>0.1)
-                    target_popularity-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_popularity='+target_popularity;
-                }
-                else if(feature=="tempo"){
-                  if(action=="increase" && target_tempo<1)
-                    target_tempo+=0.1
-                  else if(action=="decrease" && target_tempo>0.1)
-                    target_tempo-=0.1
-                  requestLink = 'https://api.spotify.com/v1/recommendations?seed_artists='+seed_artists+'&seed_tracks='+seed_tracks+'&target_tempo='+target_tempo;
-                }
-              }
+                for (var crt in result.favorCritique) {
 
-              console.log(requestLink)
-              
-              $.ajax({
-                url: requestLink,
-                data: {},
-                beforeSend: function(request) {
-                    request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
-                },
-                dataType: 'JSON',
-                type: 'GET',
-                success: function (res) {
-                  console.log(res)
-                  var oldList = playlists.concat();
-                  playlists = []
-                  songIndex = 0
-                  if(res.seeds){
-                    var songs = res.tracks
-                        oldList = playlists.concat();
-                        playlists = []
-                        songIndex = 0
-                        for (var index in songs){
-                          if(songs[index].preview_url){
-                            var newSong = {}
-                            newSong["id"] = songs[index].id
-                            newSong["url"] = songs[index].preview_url
-                            playlists.push(newSong)
-                          }
-                        }
-                        if(playlists.length<1)
-                          playlists = oldList
-                        console.log(playlists)
-                        speakandsing(response)
+                  var wording = "Do you want try ";
+                  var songType = "",
+                    features = "";
+                  var actionSet = {},
+                    action = [];
 
-                  }
-                  else if(res.tracks){
-                    var songs = res.tracks.items
-                        oldList = playlists.concat();
-                        playlists = []
-                        songIndex = 0
-                        for (var index in songs){
-                          if(songs[index].preview_url){
-                            var newSong = {}
-                            newSong["id"] = songs[index].id
-                            newSong["url"] = songs[index].preview_url
-                            playlists.push(newSong)
-                          }
-                        }
-                        if(playlists.length<1)
-                          playlists = oldList
-                        console.log(playlists)
-                        speakandsing(response)
+                  for (var index in result.favorCritique[crt]) {
 
-                  }
-                  else if(res.artists){
-                    var artistID = res.artists.items[0].id;
-                    $.ajax({
-                      url: "https://api.spotify.com/v1/artists/"+artistID+"/top-tracks?country=SE",
-                      data: {},
-                      beforeSend: function(request) {
-                          request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
-                      },
-                      dataType: 'JSON',
-                      type: 'GET',
-                      success: function (res) {
-                        console.log(res)
-                        var songs = res.tracks
-                        oldList = playlists.concat();
-                        playlists = []
-                        songIndex = 0
-                        for (var index in songs){
-                          if(songs[index].preview_url){
-                            var newSong = {}
-                            newSong["id"] = songs[index].id
-                            newSong["url"] = songs[index].preview_url
-                            playlists.push(newSong)
-                          }
-                        }
-                        
-                        if(playlists.length<1)
-                          playlists = oldList
-                        console.log(playlists)
-                        speakandsing(response)
-                      }
-                    })
-                  }
-                  else if(res.playlists){
-                    var listID = res.playlists.items[0].id;
-                    $.ajax({
-                      url: "https://api.spotify.com/v1/playlists/"+listID+"/tracks?limit=50",
-                      data: {},
-                      beforeSend: function(request) {
-                          request.setRequestHeader("Authorization", 'Bearer ' + spotifyToken);
-                      },
-                      dataType: 'JSON',
-                      type: 'GET',
-                      success: function (res) {
-
-                        console.log(res)
-
-                        var songs = res.items
-                        oldList = playlists.concat();
-                        playlists = []
-                        songIndex = 0
-                        for (var index in songs){
-                          if(songs[index].track.preview_url){
-                            var newSong = {}
-                            newSong["id"] = songs[index].track.id
-                            newSong["url"] = songs[index].track.preview_url
-
-                            playlists.push(newSong)
-                          }
-                        }
-
-                        if(playlists.length<1)
-                          playlists = oldList
-                        console.log(playlists)
-                        speakandsing(response)
-
-                      }
-                    })
+                    if (result.favorCritique[crt][index].split("-")[0] == "language") {
+                      var actionItem = {}
+                      actionItem.prop = "language"
+                      actionItem.val = result.favorCritique[crt][index].split("-")[1]
+                      actionItem.type = "equal"
+                      action.push(actionItem)
+                      songType += actionItem.val + " "
+                    } else if (result.favorCritique[crt][index].split("-")[0] == "genre") {
+                      var actionItem = {}
+                      actionItem.prop = "genre"
+                      actionItem.val = result.favorCritique[crt][index].split("-")[1]
+                      actionItem.type = "equal"
+                      action.push(actionItem)
+                      songType += actionItem.val + " "
+                    } else if (result.favorCritique[crt][index].split("-")[0] == "artist") {
+                      var actionItem = {}
+                      actionItem.prop = "artist"
+                      actionItem.val = result.favorCritique[crt][index].split("-")[1]
+                      actionItem.type = "equal"
+                      action.push(actionItem)
+                      songType += action.artist + " "
+                    } else if (result.favorCritique[crt][index].split("-")[1] == "lower") {
+                      var actionItem = {}
+                      actionItem.prop = result.favorCritique[crt][index].split("-")[0]
+                      actionItem.val = -0.01
+                      actionItem.type = "less"
+                      action.push(actionItem)
+                      features += "lower " + result.favorCritique[crt][index].split("-")[0] + " "
+                    } else if (result.favorCritique[crt][index].split("-")[1] == "higher") {
+                      var actionItem = {}
+                      actionItem.prop = result.favorCritique[crt][index].split("-")[0]
+                      actionItem.val = 0.01
+                      actionItem.type = "more"
+                      action.push(actionItem)
+                      features += "higher " + result.favorCritique[crt][index].split("-")[0] + " "
+                    }
                   }
 
-                  // for(var index in songs.tracks.items){
-                  //     if(songs.tracks.items[index].preview_url){
-                  //         var oneRecommendation = {};
-                  //         oneRecommendation.artist = songs.tracks.items[index].artists[0].name;
-                  //         oneRecommendation.song = songs.tracks.items[index].name;
-                  //         oneRecommendation.popularity =  songs.tracks.items[index].popularity;
-                  //         oneRecommendation.link = songs.tracks.items[index].preview_url;
-                  //         oneRecommendation.trackID = songs.tracks.items[index].id;
-                  //         playlists.push(oneRecommendation)
-                  //     }
-                  // }
+                  if (songType && !features)
+                    wording += songType + "music "
+                  else if (!songType && features)
+                    wording += "songs with " + features
+                  else if (songType && features) {
+                    wording += songType + "songs with " + features
+                  }
+                  actionSet.speech = wording
+                  actionSet.action = action
 
-                },
-                error: function (err) {
-                  console.log(err)
+                  critiques.push(actionSet)
                 }
-              });
-              
-              function speakandsing(text){
-                utterance.text = text;
+
+                console.log(critiques)
+                player.pause()
+                
+                utterance.text = critiques[critiquesIndex].speech;
                 synth.speak(utterance);
-                // if(text == '') 
-                //   text = '(No answer...)';
-                outputBot.textContent = text;
-
-                player.src=playlists[songIndex].url
-                document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].id+' width='
+                outputBot.textContent = critiques[critiquesIndex].speech;
+              },
+              error: function(msg) {
+                console.log(msg)
               }
 
-              utterance.onend = function(event) {
-                clearTimeout(timeoutResumeInfinity);
-                player.play();
-              }
+              //-------------------end critiquing-------------------//
+            })
 
-              player.onended=function(){
-                if(songIndex==playlists.length-1)
-                  songIndex = 0
-                else
-                  songIndex++;
-                setTimeout(function(){
-                  player.src=playlists[songIndex].url
-                  document.querySelector('iframe').src='https://open.spotify.com/embed/track/'+playlists[songIndex].id+' width='
-
-                  player.play();
-                },2000)
-              }
-
+            skipTimes = 0
+          } else {
+            skipTimes++;
+            if (songIndex == playlists.length - 1)
+              songIndex = 0
+            else
+              songIndex++;
           }
-
-            socket.on('bot reply', function(data) {
-              console.log(data)
-              synthVoice(data);
-            });
-
-            function resumeInfinity() {
-                window.speechSynthesis.resume();
-                timeoutResumeInfinity = setTimeout(resumeInfinity, 1000);
+        } else if (intent == "music.play") {
+          var artist = text.parameters["artist"]
+          var song = text.parameters["song"]
+          var language = text.parameters["music-languages"]
+          var genre = text.parameters["music-genres"]
+          if (artist.length > 0)
+            requestLink = '/searchArtist?q=' + artist[0] + '&token=' + spotifyToken;
+          else if (song)
+            requestLink = '/searchTrack?q=' + song + '&token=' + spotifyToken;
+          else if (language)
+            requestLink = '/searchPlaylist?q=' + language + '&token=' + spotifyToken;
+          else if (genre)
+            requestLink = '/searchPlaylistByCategory?genre=' + genre + "&token=" + spotifyToken;
+          else
+            requestLink = ''
+        } else if (intent == "critique.response") {
+          needReply = false;
+          var response = text.parameters["RESPONSE"]
+          if (response == "yes") {
+            oldList = playlists.concat()
+            //perform critiquing on existing set
+            for (var index in critiques) {
+              for (var index2 in critiques[index].action) {
+                var newlist = []
+                playlists.map(function(track) {
+                  if (critiques[index].action[index2].type == "equal") {
+                    if (track[critiques[index].action[index2].prop] == critiques[index].action[index2].val) {
+                      newlist.push(track)
+                      playlists = newlist.concat()
+                    }
+                  } else if (critiques[index].action[index2].type == "less") {
+                    if (track[critiques[index].action[index2].prop] < 0.5 + critiques[index].action[index2].val) {
+                      newlist.push(track)
+                      playlists = newlist.concat()
+                    }
+                  } else if (critiques[index].action[index2].type == "more") {
+                    if (track[critiques[index].action[index2].prop] > 0.5 + critiques[index].action[index2].val) {
+                      newlist.push(track)
+                      playlists = newlist.concat()
+                    }
+                  }
+                })
+              }
             }
+            console.log(playlists)
+            songIndex = 0
+            speakandsing("OK")
 
-          
-        },
-        error: function (jqXHR, err) {
-            console.log(err);
-            if(err === "timeout"){
-                $.ajax(this)
+          } else if (response == "no") {
+            if (critiquesIndex < 2) {
+              needReply = true;
+              critiquesIndex++;
+              player.pause()
+              utterance.text = critiques[critiquesIndex].speech;
+              synth.speak(utterance);
+              outputBot.textContent = critiques[critiquesIndex].speech;
+            } else if (critiquesIndex == 2) {
+              critiquesIndex = 0
+              speakandsing("OK")
             }
-        },
+          }
+        } else if (intent == "music.search") {
+          var valence = text.parameters["music-valence"]
+          var action = text.parameters["feature-actions"]
+          var feature = text.parameters["music-features"]
 
-        beforeSend: function () {
-        },
-
-        complete: function () {
+          if (valence) {
+            if (valence == "happy")
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&seed_tracks=' + seed_tracks + '&min_valence=0.7&token=' + spotifyToken;
+            else if (valence == "neutral")
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&seed_tracks=' + seed_tracks + '&target_valence=0.5&token=' + spotifyToken;
+            else if (valence == "sad")
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&seed_tracks=' + seed_tracks + '&max_valence=0.3&token=' + spotifyToken;
+          } else if (feature) {
+            console.log(feature)
+            if (feature == "energy") {
+              if (action == "increase" && target_energy < 1)
+                target_energy += 0.1
+              else if (action == "decrease" && target_energy > 0.1)
+                target_energy -= 0.1
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&target_energy=' + target_energy + "&token=" + spotifyToken;
+            } else if (feature == "danceability") {
+              if (action == "increase" && target_danceability < 1)
+                target_danceability += 0.1
+              else if (action == "decrease" && target_danceability > 0.1)
+                target_danceability -= 0.1
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&target_danceability=' + target_danceability + "&token=" + spotifyToken;
+            } else if (feature == "liveness") {
+              if (action == "increase" && target_liveness < 1)
+                target_liveness += 0.1
+              else if (action == "decrease" && target_liveness > 0.1)
+                target_liveness -= 0.1
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&target_liveness=' + target_liveness + "&token=" + spotifyToken;
+            } else if (feature == "speech") {
+              if (action == "increase" && target_speechiness < 1)
+                target_speechiness += 0.1
+              else if (action == "decrease" && target_speechiness > 0.1)
+                target_speechiness -= 0.1
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&target_speechiness=' + target_speechiness + "&token=" + spotifyToken;
+            } else if (feature == "popularity") {
+              if (action == "increase" && target_popularity < 1)
+                target_popularity += 0.1
+              else if (action == "decrease" && target_popularity > 0.1)
+                target_popularity -= 0.1
+              requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&target_popularity=' + target_popularity + "&token=" + spotifyToken;
+            } else if (feature == "tempo") {
+              if (action == "increase")
+                requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&min_tempo=120&token="+spotifyToken;'
+              else if (action == "decrease")
+                requestLink = '/getRecom?artistSeeds=' + seed_artists + '&trackSeeds=' + seed_tracks + '&max_tempo=60&token="+spotifyToken;'
+            }
+          }
         }
 
-    });
+        console.log(requestLink)
+
+        if (requestLink) {
+          $.get(requestLink, function(res) {
+            console.log(res)
+            oldList = playlists.concat()
+            playlists = res.tracks
+            songIndex = 0
+            speakandsing(response)
+          })
+        } else {
+          if (!needReply)
+            speakandsing("Ok")
+        }
+
+        function speakandsing(text) {
+
+          utterance.text = text;
+          synth.speak(utterance);
+
+          // if(text == '') 
+          //   text = '(No answer...)';
+          outputBot.textContent = text;
+
+          if (playlists[songIndex].link)
+            player.src = playlists[songIndex].link
+          else
+            player.src = "/res/preview.mp3"
+          document.querySelector('iframe').src = 'https://open.spotify.com/embed/track/' + playlists[songIndex].id + ' width='
+
+        }
+
+        utterance.onend = function(event) {
+          if (!needReply) {
+            clearTimeout(timeoutResumeInfinity);
+            player.play();
+          }
+        }
+
+        player.onended = function() {
+          if (songIndex == playlists.length - 1)
+            songIndex = 0
+          else
+            songIndex++;
+          setTimeout(function() {
+            if (playlists[songIndex].link)
+              player.src = playlists[songIndex].link
+            else
+              player.src = "/res/preview.mp3"
+            document.querySelector('iframe').src = 'https://open.spotify.com/embed/track/' + playlists[songIndex].id + ' width='
+
+            player.play();
+          }, 2000)
+        }
+      }
+
+      socket.on('bot reply', function(data) {
+        console.log(data)
+        synthVoice(data);
+      });
+
+      function resumeInfinity() {
+        window.speechSynthesis.resume();
+        timeoutResumeInfinity = setTimeout(resumeInfinity, 1000);
+      }
+
+    },
+    error: function(jqXHR, err) {
+      console.log(err);
+      if (err === "timeout") {
+        $.ajax(this)
+      }
+    },
+
+    beforeSend: function() {},
+
+    complete: function() {}
+
+  });
 })

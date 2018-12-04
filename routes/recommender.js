@@ -19,7 +19,7 @@ var recommender = function (token) {
     return {
 
         getAudioFeatures:function(ids) {
-            return spotifyApi.getAudioFeaturesForTracks([ids])
+            return spotifyApi.getAudioFeaturesForTracks(ids)
                 .then(function(data) {
                     return data.body
                 }, function(err) {
@@ -109,13 +109,38 @@ var recommender = function (token) {
         },
 
 
-        getRecommendation: function (limitNum, artistSeeds, trackSeeds, genreSeeds) {
-            return spotifyApi.getRecommendations({
-                limit: limitNum,
-                seed_artists: artistSeeds,
-                seed_tracks: trackSeeds,
-                seed_genres: genreSeeds,
-            }).then(function (data) {
+        getRecommendation: function (artistSeeds, trackSeeds, genreSeeds, min_valence, max_valence,target_valence,target_energy,
+            target_danceability,target_liveness,target_speechiness,target_popularity,min_tempo,max_tempo) {
+            var setting = {}
+            setting.limit = 50
+            if(artistSeeds)
+                setting.seed_artists = artistSeeds
+            if(trackSeeds)
+                setting.seed_tracks = trackSeeds
+            if(genreSeeds)
+                setting.seed_genres = genreSeeds
+            if(min_valence)
+                setting.min_valence = min_valence
+            if(target_valence)
+                setting.target_valence = target_valence
+            if(max_valence)
+                setting.max_valence = max_valence
+            if(target_energy)
+                setting.target_energy = target_energy
+            if(target_danceability)
+                setting.target_danceability = target_danceability
+            if(target_liveness)
+                setting.tartget_liveness = target_liveness
+            if(target_speechiness)
+                setting.target_speechiness = target_speechiness
+            if(target_popularity)
+                setting.target_popularity = target_popularity
+            if(min_tempo)
+                setting.min_tempo = min_tempo
+            if(max_tempo)
+                setting.max_tempo = max_tempo
+
+            return spotifyApi.getRecommendations(setting).then(function (data) {
                 return data.body.tracks
             }, function (err) {
                 return err;
@@ -209,25 +234,25 @@ var recommender = function (token) {
                 });
         },
 
-        getPlaylistTrackIDs: function (category) {
+        getPlaylistByCategory: function (category) {
             return spotifyApi.getPlaylistsForCategory(category,
                 {}
             )
             .then(function(data) {
-                return data.body.playlists;
+                return data.body;
             }, function(err) {
                 return err
             });
 
         },
 
-        getPlaylistTracks: function (category) {
-            return spotifyApi.getPlaylistTracks2(category, {
-                fields: 'items'
+        getPlaylistTracks: function (id) {
+            return spotifyApi.getPlaylistTracks(id, {
+                fields:"items(track(artists,id,name,popularity,preview_url))"
             })
             .then(
             function(data) {
-                return data.body.items;
+                return data.body;
             },
             function(err) {
                 return err
@@ -242,6 +267,51 @@ var recommender = function (token) {
                 return data.body.tracks;
             },
             function(err) {
+                return err
+            });
+        },
+
+        searchTrack: function(text){
+            return spotifyApi.searchTracks(text)
+            .then(function(data) {
+                return data.body;
+            }, function(err) {
+                return err
+            });
+        },
+
+        searchArtist: function(text){
+            return spotifyApi.searchArtists(text)
+            .then(function(data) {
+                return data.body;
+            }, function(err) {
+                return err
+            });
+        },
+
+        searchPlaylist: function(text){
+            return spotifyApi.searchPlaylists(text)
+            .then(function(data) {
+                return data.body;
+            }, function(err) {
+                return err
+            });
+        },
+
+        getArtistTopTracks: function(artist, country){
+            return spotifyApi.getArtistTopTracks(artist, country)
+            .then(function(data){
+                return data.body;
+            }, function (err) {
+                return err
+            });
+        },
+
+        getPlaylist: function(id){
+            return spotifyApi.getPlaylist(id)
+            .then(function(data) {
+                return data.body;
+            }, function(err) {
                 return err
             });
         }

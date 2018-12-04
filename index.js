@@ -2,9 +2,7 @@
 
 //const APIAI_TOKEN = '4b48fe544c5f435d8e325f450b26b5f9';
 const APIAI_TOKEN = '1493bad763ec4671b1ee6ea4a8c80452';
-
 const APIAI_SESSION_ID = '123456789abcdefghj';
-
 
 const express = require('express'),
     path = require('path'),
@@ -20,7 +18,14 @@ const express = require('express'),
 const app = express();
 var index = require('./routes/router');
 
-// app.use(express.static(__dirname + '/views')); // html
+mongoose.connect("mongodb://localhost:27017/user", function (err) {
+    if (err) {
+        console.log("connection error", err);
+    } else {
+        console.log('connection successful!');
+    }
+});
+
 app.use(express.static(__dirname + '/public')); // js, css, images
 app.use(express.static(path.join(__dirname, 'bower_components')));
 
@@ -66,17 +71,11 @@ io.on('connection', function(socket){
 
 const apiai = require('apiai')(APIAI_TOKEN);
 
-// Web UI
-app.get('/', (req, res) => {
-  res.sendFile('index.html');
-});
-
 io.on('connection', function(socket) {
   socket.on('chat message', (text) => {
     console.log('Message: ' + text);
 
     // Get a reply from API.ai
-
     let apiaiReq = apiai.textRequest(text, {
       sessionId: APIAI_SESSION_ID
     });
