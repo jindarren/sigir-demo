@@ -18,7 +18,7 @@ const express = require('express'),
 const app = express();
 var index = require('./routes/router');
 
-mongoose.connect("mongodb://3238bef1a3c1b67be1236eb9941a25f3:2010qhyjs@10a.mongo.evennode.com:27017,10b.mongo.evennode.com:27017/3238bef1a3c1b67be1236eb9941a25f3?replicaSet=us-10/user", function (err) {
+mongoose.connect("mongodb://3238bef1a3c1b67be1236eb9941a25f3:2010qhyjs@10a.mongo.evennode.com:27017,10b.mongo.evennode.com:27017/3238bef1a3c1b67be1236eb9941a25f3?replicaSet=us-10", function (err) {
     if (err) {
         console.log("connection error", err);
     } else {
