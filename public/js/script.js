@@ -210,7 +210,7 @@ $(document).ready(function() {
 
                 console.log(critiques)
                 player.pause()
-                
+
                 utterance.text = critiques[critiquesIndex].speech;
                 synth.speak(utterance);
                 outputBot.textContent = critiques[critiquesIndex].speech;
@@ -276,8 +276,6 @@ $(document).ready(function() {
             }
             console.log(playlists)
             songIndex = 0
-            speakandsing("OK")
-
           } else if (response == "no") {
             if (critiquesIndex < 2) {
               needReply = true;
