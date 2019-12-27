@@ -5,7 +5,7 @@ var recommender = function (token) {
     var SpotifyWebApi = require('spotify-web-api-node'),
         appKey = 'a1d9f15f6ba54ef5aea0c5c4e19c0d2c',
         appSecret = 'b368bdb3003747ec861e62d3bf381ba0',
-        redirectUrl = 'http://spotifybot.us-3.evennode.com/callback';
+        redirectUrl = 'https://music-bot.top:3000/callback';
         //redirectUrl = 'http://localhost:3000/callback';
 
     var spotifyApi = new SpotifyWebApi({
@@ -109,8 +109,13 @@ var recommender = function (token) {
         },
 
 
-        getRecommendation: function (artistSeeds, trackSeeds, genreSeeds, min_valence, max_valence,target_valence,target_energy,
-            target_danceability,target_liveness,target_speechiness,target_popularity,min_tempo,max_tempo) {
+        getRecommendation: function (artistSeeds, trackSeeds, genreSeeds, 
+            min_valence, max_valence,target_valence, 
+            min_tempo, target_tempo, max_tempo, 
+            min_energy, max_energy,
+            min_danceability, max_danceability,
+            min_speechiness, max_speechiness,
+            min_popularity, max_popularity) {
             var setting = {}
             setting.limit = 50
             if(artistSeeds)
@@ -125,20 +130,28 @@ var recommender = function (token) {
                 setting.target_valence = target_valence
             if(max_valence)
                 setting.max_valence = max_valence
-            if(target_energy)
-                setting.target_energy = target_energy
-            if(target_danceability)
-                setting.target_danceability = target_danceability
-            if(target_liveness)
-                setting.tartget_liveness = target_liveness
-            if(target_speechiness)
-                setting.target_speechiness = target_speechiness
-            if(target_popularity)
-                setting.target_popularity = target_popularity
+            if(min_energy)
+                setting.target_energy = min_energy
+            if(max_energy)
+                setting.target_energy = max_energy
+            if(min_danceability)
+                setting.min_danceability = min_danceability
+            if(max_danceability)
+                setting.min_danceability = max_danceability
+            if(min_speechiness)
+                setting.min_speechiness = min_speechiness
+            if(max_speechiness)
+                setting.max_speechiness = max_speechiness
+            if(min_popularity)
+                setting.min_popularity = min_popularity
+            if(max_popularity)
+                setting.max_popularity = max_popularity
             if(min_tempo)
                 setting.min_tempo = min_tempo
             if(max_tempo)
                 setting.max_tempo = max_tempo
+            if(max_tempo)
+                setting.target_tempo = target_tempo
 
             return spotifyApi.getRecommendations(setting).then(function (data) {
                 return data.body.tracks
@@ -148,24 +161,11 @@ var recommender = function (token) {
         },
 
 
-        getRecommendationByArtist: function (limitNum, seeds, min_danceability, max_danceability,
-                                             min_energy, max_energy, min_instrumentalness, max_instrumentalness, min_liveness, max_liveness,
-                                             min_speechiness, max_speechiness, min_valence,max_valence) {
+        getRecommendationByArtist: function (seeds,scenario) {
             return spotifyApi.getRecommendations({
-                limit: limitNum,
+                limit: 50,
                 seed_artists: seeds,
-                min_danceability: min_danceability,
-                max_danceability: max_danceability,
-                min_energy: min_energy,
-                max_energy: max_energy,
-                min_instrumentalness: min_instrumentalness,
-                max_instrumentalness: max_instrumentalness,
-                min_liveness: min_liveness,
-                max_liveness: max_liveness,
-                min_speechiness: min_speechiness,
-                max_speechiness: max_speechiness,
-                min_valence: min_valence,
-                max_valence: max_valence
+                seed_genres: scenario
             }).then(function (data) {
                 return data.body.tracks
             }, function (err) {
@@ -173,24 +173,11 @@ var recommender = function (token) {
             })
         },
 
-        getRecommendationByTrack: function (limitNum, seeds, min_danceability, max_danceability,
-                                            min_energy, max_energy, min_instrumentalness, max_instrumentalness, min_liveness, max_liveness,
-                                            min_speechiness, max_speechiness, min_valence,max_valence) {
+        getRecommendationByTrack: function (seeds,scenario) {
             return spotifyApi.getRecommendations({
-                limit: limitNum,
+                limit: 50,
                 seed_tracks: seeds,
-                min_danceability: min_danceability,
-                max_danceability: max_danceability,
-                min_energy: min_energy,
-                max_energy: max_energy,
-                min_instrumentalness: min_instrumentalness,
-                max_instrumentalness: max_instrumentalness,
-                min_liveness: min_liveness,
-                max_liveness: max_liveness,
-                min_speechiness: min_speechiness,
-                max_speechiness: max_speechiness,
-                min_valence: min_valence,
-                max_valence: max_valence
+                seed_genres: scenario
             }).then(function (data) {
                 return data.body.tracks
             }, function (err) {
@@ -198,24 +185,10 @@ var recommender = function (token) {
             })
         },
 
-        getRecommendationByGenre: function (limitNum, seeds, min_danceability, max_danceability,
-                                            min_energy, max_energy, min_instrumentalness, max_instrumentalness, min_liveness, max_liveness,
-                                            min_speechiness, max_speechiness, min_valence,max_valence) {
+        getRecommendationByGenre: function (seeds,scenario) {
             return spotifyApi.getRecommendations({
-                limit: limitNum,
-                seed_genres: seeds,
-                min_danceability: min_danceability,
-                max_danceability: max_danceability,
-                min_energy: min_energy,
-                max_energy: max_energy,
-                min_instrumentalness: min_instrumentalness,
-                max_instrumentalness: max_instrumentalness,
-                min_liveness: min_liveness,
-                max_liveness: max_liveness,
-                min_speechiness: min_speechiness,
-                max_speechiness: max_speechiness,
-                min_valence: min_valence,
-                max_valence: max_valence
+                limit: 50,
+                seed_genres: seeds+','+scenario
             }).then(function (data) {
                 return data.body.tracks
             }, function (err) {
@@ -264,7 +237,7 @@ var recommender = function (token) {
             })
             .then(
             function(data) {
-                return data.body.tracks;
+                return data.body;
             },
             function(err) {
                 return err

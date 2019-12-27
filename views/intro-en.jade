@@ -1,0 +1,229 @@
+doctype html
+html
+  head
+    title Study Introduction
+    meta(http-equiv='Content-Type', content='text/html; charset=utf-8')
+    style.
+      body{
+        padding: 20px;
+      }
+
+      .btn-primary{
+        margin-left:10px;
+        margin-right:10px;
+      }
+
+      p{
+        text-align:left;
+      }
+
+      .features{
+        width:90%;
+        margin-bottom:20px;
+      }
+
+      .container-fluid{
+        display:none;
+      }
+
+      .card{
+        margin:20px;
+      }
+  body
+    #part1.container
+      h4(style="text-align:center") Welcome to Evaluate Our Music Bot
+      p Dear Participant,
+      p Thank you very much for taking part in this experiment, which aims at 
+        b studying how users communicate with a music chatbot for searching for songs. 
+        | To make it worth your while, on completion of the study, you can choose to enter a prize draw to win one of ten €10 gift vouchers.
+
+      h5 Tasks:
+      p Please imagine yourself as the user described in the task scenarios and then 
+        b look for 5 songs that best suit your preferences and current situation. 
+        | The initial recommendations may not fit your taste, you need to tune recommender by chatting with the bot. All music information used in this experiment was from Spotify.
+
+      h5 Duration: 
+      p 30-40 minutes (Make sure you finish the study in 1 hour without a long break)
+
+      h5 Task steps:
+      p Six steps:
+      p Step 1: You will be asked to create a musical profile by selecting 1 to 3 items for each type of seeds such as track seeds, artist seeds, and music genre seeds. And indicate your preferred levels (low, middle, high) for 5 audio features.
+      p Step 2: You will then fill out your personal background;
+      p Step 3: You can get familiar with the music bot by trying two ways of tuning recommendations before starting the study;
+        ul
+          li Try 
+            b textual input / voice input 
+            img(src="/img/voice.png")
+            |  to tell bot what kind of music you are looking for（Some examples of tuning recommendations are shown on the right side panel).
+          li Try 
+            b "let bot suggest" 
+            img(src="/img/system-crit.png")
+            |  button to get bot’s suggestions for searching for music, which aims to help you find good music. 
+      p Step 4: Based on the first scenario, you will be asked to find 5 favorite songs and give ratings for them using the first system. After that, you will be asked to fill a questionnaire to give your opinions on the first system;
+      p Step 5: You will be asked to repeat the steps for the second scenario using the second system;
+      p Step 6: You will give us your overall preference over the two used systems.
+
+      h5 Video tutorial:
+      p Please watch the following tutorial before the task.
+      div#player
+
+      h5 Tips:
+      ul 
+        li 
+          b You should use Chrome browser (version > 33.0) on your PC.
+        li Make sure your browser language has been set to English. You can add the language of English in the page 
+          b chrome://settings/languages 
+          | (copy this link and open the page in a new tab.)
+        li You can send text by pressing "Enter" 
+        li We suggest you to pause the song when you are using voice recognition or bot is speaking.
+        li First submit the questionnaire and then click "X" to close the popup window.
+        li Do not change User ID prefilled in the questionnaire.
+      
+      p All of your data will be kept confidentially and be only used for our research analysis.
+      p We greatly appreciate your efforts and time in advance.
+
+      hr
+      .row.justify-content-center
+        button#next1.btn.btn-primary Start study
+
+
+    #part2.container-fluid
+      .container
+        h5(style="text-align:center") Specify your liked songs (at least 1 and at most 3)
+        .input-group
+          input#track-form.form-control(type='text', placeholder="Please type your liked song's name", aria-label="track-name", aria-describedby='search-track')
+          .input-group-append
+            button#search-track.btn.btn-outline-primary(type='button') Search
+        .candidate-tracks
+        .selected-tracks.row
+      hr
+      .row.justify-content-center
+        button#next2-back.btn.btn-primary Back
+        button#next2.btn.btn-primary Next
+            
+    #part3.container-fluid   
+      .container
+          h5(style="text-align:center") Specify your liked artists (at least 1 and at most 3)
+          .input-group
+            input#artist-form.form-control(type='text', placeholder="Please type your liked artist's name", aria-label="artist-name", aria-describedby='search-artist')
+            .input-group-append
+              button#search-artist.btn.btn-outline-primary(type='button') Search
+          .candidate-artists
+          .selected-artists.row
+      hr
+      .row.justify-content-center
+        button#next3-back.btn.btn-primary Back
+        button#next3.btn.btn-primary Next     
+
+    #part4.container-fluid
+      .row.justify-content-around
+        .genre
+          h5(style="text-align:center") Select your liked genres (at least 1 and at most 3)
+          .row.justify-content-around
+            .col-md-6.push-col-md-3.genres
+      hr
+      .row.justify-content-center
+        button#next4-back.btn.btn-primary Back
+        button#next4.btn.btn-primary Next
+
+    #part5.container-fluid
+      .row.justify-content-around
+        .genre
+          h5(style="text-align:center") Indicate your music preference by audio features
+          .row.justify-content-around
+            .col-md-10.push-col-md-1
+              p 
+                b Danceability: 
+                | It describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity.
+              #danceability.row.justify-content-around.features
+                span.form-check.form-check-inline
+                  input#inlineRadio1.form-check-input.feature-selection(type='radio', name='danceOption', value='low')
+                  label.form-check-label(for='inlineRadio1') Low
+                span.form-check.form-check-inline
+                  input#inlineRadio2.form-check-input.feature-selection(type='radio', name='danceOption', value='medium')
+                  label.form-check-label(for='inlineRadio2') Medium
+                span.form-check.form-check-inline
+                  input#inlineRadio3.form-check-input.feature-selection(type='radio', name='danceOption', value='high')
+                  label.form-check-label(for='inlineRadio3') High
+              .row.justify-content-center.danceability-example.example
+              p 
+                b Speechiness: 
+                | It detects the presence of spoken words in a track.
+              #speechiness.row.justify-content-around.features
+                span.form-check.form-check-inline
+                  input#inlineRadio4.form-check-input.feature-selection(type='radio', name='speechOption', value='low')
+                  label.form-check-label(for='inlineRadio4') Low
+                span.form-check.form-check-inline
+                  input#inlineRadio5.form-check-input.feature-selection(type='radio', name='speechOption', value='medium')
+                  label.form-check-label(for='inlineRadio5') Medium
+                span.form-check.form-check-inline
+                  input#inlineRadio6.form-check-input.feature-selection(type='radio', name='speechOption', value='high')
+                  label.form-check-label(for='inlineRadio6') High
+              .row.justify-content-center.speechiness-example.example
+              p 
+                b Energy: 
+                | It represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale.
+              #energy.row.justify-content-around.features
+                span.form-check.form-check-inline
+                  input#inlineRadio7.form-check-input.feature-selection(type='radio', name='energyOption', value='low')
+                  label.form-check-label(for='inlineRadio7') Low
+                span.form-check.form-check-inline
+                  input#inlineRadio8.form-check-input.feature-selection(type='radio', name='energyOption', value='medium')
+                  label.form-check-label(for='inlineRadio8') Medium
+                span.form-check.form-check-inline
+                  input#inlineRadio9.form-check-input.feature-selection(type='radio', name='energyOption', value='high')
+                  label.form-check-label(for='inlineRadio9') High
+              .row.justify-content-center.energy-example.example
+              p 
+                b Valence: 
+                | It describes the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).
+              #valence.row.justify-content-around.features
+                span.form-check.form-check-inline
+                  input#inlineRadio10.form-check-input.feature-selection(type='radio', name='valenceOption', value='low')
+                  label.form-check-label(for='inlineRadio10') Low
+                span.form-check.form-check-inline
+                  input#inlineRadio11.form-check-input.feature-selection(type='radio', name='valenceOption', value='medium')
+                  label.form-check-label(for='inlineRadio11') Medium
+                span.form-check.form-check-inline
+                  input#inlineRadio12.form-check-input.feature-selection(type='radio', name='valenceOption', value='high')
+                  label.form-check-label(for='inlineRadio12') High
+              .row.justify-content-center.valence-example.example
+              p 
+                b Tempo: 
+                | It is the speed or pace of a given piece and derives directly from the average beat duration.  
+              #tempo.row.justify-content-around.features
+                span.form-check.form-check-inline
+                  input#inlineRadio13.form-check-input.feature-selection(type='radio', name='tempoOption', value='low')
+                  label.form-check-label(for='inlineRadio1') Low
+                span.form-check.form-check-inline
+                  input#inlineRadio14.form-check-input.feature-selection(type='radio', name='tempoOption', value='medium')
+                  label.form-check-label(for='inlineRadio2') Medium
+                span.form-check.form-check-inline
+                  input#inlineRadio15.form-check-input.feature-selection(type='radio', name='tempoOption', value='high')
+                  label.form-check-label(for='inlineRadio3') High
+              .row.justify-content-center.tempo-example.example 
+      hr
+      .row.justify-content-center
+        a.btn.btn-primary(href="./preference-3") Back
+        button#next5.btn.btn-primary(type='button') Submit
+    link(href='../bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+    link(href='../jquery-ui/themes/base/jquery-ui.min.css', rel='stylesheet')
+    script(src = "../jquery/dist/jquery.min.js", charset = 'utf-8')
+    script(type = "text/javascript", src = "../jquery.cookie/jquery.cookie.js", charset = 'utf-8')
+    script(src = "js/popper.min.js", charset = 'utf-8')
+    script(src = "../bootstrap/dist/js/bootstrap.min.js")
+    script(src = "js/preference-en.js")
+    script.
+            var tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            var firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+            var player;
+            function onYouTubeIframeAPIReady() {
+                player = new YT.Player('player', {
+                    height: '270',
+                    width: '480',
+                    videoId: 'G_nK8MUqU_Y',
+                });
+            }

@@ -11,12 +11,18 @@ var userSchema = new mongoose.Schema({
 	preferenceData:{	
 		artist: [],
 		genre: [],
+		track: [],
 		language: String,
+		popularityRange: [],
+		danceabilityRange: [],
+		energyRange: [],
+		speechinessRange: [],
+		valenceRange: [],
+		tempoRange: [],
 		popularity: Number,
 		danceability: Number,
 		energy: Number,
 		speechiness: Number,
-		liveness: Number,
 		valence: Number,
 		tempo: Number,
 		timestamp: Date,
@@ -29,11 +35,11 @@ var userSchema = new mongoose.Schema({
 		danceabilityWeight: Number,
 		energyWeight: Number,
 		speechinessWeight: Number,
-		livenessWeight: Number,
 		valenceWeight: Number,
 		tempoWeight: Number,
 		timestamp: Date,
-	}
+	},
+	logger:{}
 });
 
 var User = mongoose.model('User', userSchema);

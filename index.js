@@ -15,10 +15,18 @@ const express = require('express'),
     passport = require('passport'),
     mongoose = require('mongoose');
 
+var https = require('https')
+    ,fs = require("fs");
+
+var options = {
+    key: fs.readFileSync('1644342_music-bot.top.key'),
+    cert: fs.readFileSync('1644342_music-bot.top.pem')
+};
+
 const app = express();
 var index = require('./routes/router');
 
-mongoose.connect("mongodb://3238bef1a3c1b67be1236eb9941a25f3:2010qhyjs@10a.mongo.evennode.com:27017,10b.mongo.evennode.com:27017/3238bef1a3c1b67be1236eb9941a25f3?replicaSet=us-10", function (err) {
+mongoose.connect("mongodb://localhost:27017/bot", function (err) {
     if (err) {
         console.log("connection error", err);
     } else {
@@ -28,6 +36,10 @@ mongoose.connect("mongodb://3238bef1a3c1b67be1236eb9941a25f3:2010qhyjs@10a.mongo
 
 app.use(express.static(__dirname + '/public')); // js, css, images
 app.use(express.static(path.join(__dirname, 'bower_components')));
+app.use(express.static(path.join(__dirname, 'node_modules')));
+
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 app.set('trust proxy', 1); // trust first proxy
 
@@ -59,9 +71,12 @@ app.use(express.static(path.join(__dirname, 'node_modules')));
 
 app.use('/', index);
 
+// const server = app.listen(process.env.PORT || 3000, () => {
+//   console.log('Express server listening on port %d in %s mode', server.address().port, app.settings.env);
+// });
 
-const server = app.listen(process.env.PORT || 3000, () => {
-  console.log('Express server listening on port %d in %s mode', server.address().port, app.settings.env);
+const server = https.createServer(options, app).listen(3000, function () {
+    console.log('Https server listening on port ' + 3000);
 });
 
 const io = require('socket.io')(server);

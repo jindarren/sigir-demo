@@ -12,13 +12,15 @@ class User
 		this.preferenceData_variance = preferenceData_variance;
 		this.attributeWeight = attributeWeight;
 	}
-
 };
+
+
 
 // Item attributes 
 let numericalAttributes = ['popularity', 'danceability', 'energy', 'speechiness', 'tempo', 'liveness', 'valence'];
 let nominalAttributes = ['artist','genre','language'];
 let attributes = numericalAttributes.concat(nominalAttributes);
+
 
 
 // User Data
@@ -30,10 +32,10 @@ let defaultWeight = 1/(numericalAttributes.length+nominalAttributes.length);
 let default_varience = 0.01;
 
 // may be revised if needed
-let preferenceData = {'artist':['Kevin Hart','Halsey'],'genre':['comedy','brostep'], 'language':'eng', 'popularity': 50, 'danceability': 0.5, 'energy':0.5,
- 'speechiness':0.5, 'tempo':120, 'liveness':0.5, 'valence':0.5};
+let preferenceData = {'artist':['Kevin Hart','Halsey'],'genre':['comedy','brostep'], 'popularity': 50, 'danceability': 0.5, 'energy':0.5,
+ 'speechiness':0.5, 'tempo':0.5, 'liveness':0.5, 'valence':0.5};
 let preferenceData_variance = { 'popularity': 3, 'danceability': default_varience, 'energy':default_varience, 'speechiness':default_varience, 
-'tempo':default_varience, 'liveness':default_varience, 'valence':default_varience};
+'acousticness':default_varience, 'instrumentalness':default_varience, 'liveness':default_varience, 'valence':default_varience};
 
 
 let attributeWeight = {'artist':defaultWeight,'genre':defaultWeight, 'language':defaultWeight, 'popularity':defaultWeight, 
@@ -42,8 +44,9 @@ let attributeWeight = {'artist':defaultWeight,'genre':defaultWeight, 'language':
 let user = new User(userId, preferenceData,preferenceData_variance, attributeWeight);
 
 //Item Data
-let inputFilePath = "spotify_tracks_small.csv";
+let inputFilePath = "spotify_tracks_new.csv";
 let itemData = [];
+
 
 // 
 
@@ -56,8 +59,6 @@ fs.createReadStream(inputFilePath)
 		itemData.push(data);
 	})
 	.on('end', () => {
-
-		console.log(itemData[2])
 		
 		console.log("------------------------------------------------");
 		console.log("Total Item Data: "+itemData.length + " records");
@@ -95,3 +96,4 @@ fs.createReadStream(inputFilePath)
 
 		// When system get the response from user, we need to revise users' preference and adjust attribute weight respectively.
 	});  
+
